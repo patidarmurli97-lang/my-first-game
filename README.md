@@ -1,121 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Car Racing Game</title>
+<title>Advanced Snake Game</title>
 
 <style>
-
-#car{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
+body{
+text-align:center;
+font-family:Arial;
+background:#222;
+color:white;
 }
 
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-
-
-#car{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-}
-
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-
-#car{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-}
-
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-#car{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-}
-
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-
-#game{
-width:300px;
-height:500px;
+canvas{
 background:black;
-margin:auto;
-position:relative;
-overflow:hidden;
+margin-top:20px;
 }
 
-#car{
-width:60px;
-height:100px;
-background-image:src="car.png" width="50" height"100" alt="car"
-
-background-size:contain
-position:absolute;
-bottom:20px;
-left:120px;
+button{
+padding:10px 20px;
+font-size:16px;
+margin:5px;
 }
 
-.enemy{
-width:60px;
-height:100px;
-background-image:url("https://i.imgur.com/3ZQ3Z6P.png");
-background-size:cover;
-position:absolute;
-top:-100px;
+#controls{
+margin-top:10px;
 }
 </style>
 
@@ -123,73 +31,153 @@ top:-100px;
 
 <body>
 
-<h2 style="text-align:center;color:white;">Car Racing Game</h2>
+<h2>Snake Game</h2>
 
-<div id="game">
-<div id="car"></div>
+<button onclick="startGame()">Start Game</button>
+<button onclick="restartGame()">Restart</button>
+
+<h3 id="score">Score: 0</h3>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="controls">
+<br>
+<button onclick="setDirection('UP')">⬆</button>
+<br>
+<button onclick="setDirection('LEFT')">⬅</button>
+<button onclick="setDirection('DOWN')">⬇</button>
+<button onclick="setDirection('RIGHT')">➡</button>
 </div>
 
 <script>
 
-let car=document.getElementById("car");
-let game=document.getElementById("game");
-let carLeft=120;
+let canvas=document.getElementById("game");
+let ctx=canvas.getContext("2d");
 
-document.addEventListener("keydown",function(e){
+let box=20;
 
-if(e.key==="ArrowLeft" && carLeft>0){
-carLeft-=20;
+let snake;
+let food;
+let direction;
+let score;
+let game;
+
+function startGame(){
+
+snake=[{x:200,y:200}];
+
+food={
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
+};
+
+direction="RIGHT";
+
+score=0;
+
+document.getElementById("score").innerHTML="Score: 0";
+
+clearInterval(game);
+
+game=setInterval(draw,100);
+
 }
 
-if(e.key==="ArrowRight" && carLeft<240){
-carLeft+=20;
+function restartGame(){
+startGame();
 }
 
-car.style.left=carLeft+"px";
+document.addEventListener("keydown",function(event){
+
+if(event.key==="ArrowLeft") setDirection("LEFT");
+if(event.key==="ArrowUp") setDirection("UP");
+if(event.key==="ArrowRight") setDirection("RIGHT");
+if(event.key==="ArrowDown") setDirection("DOWN");
 
 });
 
-function createEnemy(){
+function setDirection(dir){
 
-let enemy=document.createElement("div");
-enemy.classList.add("enemy");
-enemy.style.left=Math.floor(Math.random()*240)+"px";
-game.appendChild(enemy);
+if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT";
+if(dir==="UP" && direction!=="DOWN") direction="UP";
+if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
+if(dir==="DOWN" && direction!=="UP") direction="DOWN";
 
-let enemyTop=-100;
-
-let move=setInterval(function(){
-
-enemyTop+=5;
-enemy.style.top=enemyTop+"px";
-
-if(enemyTop>500){
-enemy.remove();
-clearInterval(move);
 }
 
-let carRect=car.getBoundingClientRect();
-let enemyRect=enemy.getBoundingClientRect();
+function draw(){
+
+ctx.fillStyle="black";
+ctx.fillRect(0,0,400,400);
+
+for(let i=0;i<snake.length;i++){
+
+ctx.fillStyle=i==0?"lime":"green";
+ctx.fillRect(snake[i].x,snake[i].y,box,box);
+
+}
+
+ctx.fillStyle="red";
+ctx.fillRect(food.x,food.y,box,box);
+
+let snakeX=snake[0].x;
+let snakeY=snake[0].y;
+
+if(direction==="LEFT") snakeX-=box;
+if(direction==="UP") snakeY-=box;
+if(direction==="RIGHT") snakeX+=box;
+if(direction==="DOWN") snakeY+=box;
+
+if(snakeX===food.x && snakeY===food.y){
+
+score++;
+document.getElementById("score").innerHTML="Score: "+score;
+
+food={
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
+};
+
+}else{
+
+snake.pop();
+
+}
+
+let newHead={x:snakeX,y:snakeY};
 
 if(
-carRect.left<enemyRect.left+60 &&
-carRect.left+60>enemyRect.left &&
-carRect.top<enemyRect.top+100 &&
-carRect.top+100>enemyRect.top
+snakeX<0 || snakeY<0 ||
+snakeX>=400 || snakeY>=400 ||
+collision(newHead,snake)
 ){
+
+clearInterval(game);
 alert("Game Over");
-location.reload();
-}
-
-},50);
 
 }
 
-setInterval(createEnemy,2000);
+snake.unshift(newHead);
+
+}
+
+function collision(head,array){
+
+for(let i=0;i<array.length;i++){
+
+if(head.x===array[i].x && head.y===array[i].y){
+return true;
+}
+
+}
+
+return false;
+
+}
 
 </script>
 
 </body>
-</html>kfq
+</html>
 
 
