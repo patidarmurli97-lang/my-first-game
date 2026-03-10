@@ -1,14 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>My First Game</title>
+<title>Car Racing Game</title>
+<style>
+body{
+margin:0;
+background:gray;
+overflow:hidden;
+}
+#game{
+width:300px;
+height:500px;
+background:black;
+margin:auto;
+position:relative;
+overflow:hidden;
+}
+#car{
+width:50px;
+height:80px;
+background:red;
+position:absolute;
+bottom:20px;
+left:125px;
+}
+.enemy{
+width:50px;
+height:80px;
+background:yellow;
+position:absolute;
+top:-100px;
+}
+</style>
 </head>
 
 <body>
-<h1>My First Game</h1>
-<p>This is my first game on GitHub</p>
 
-<button onclick="alert('Game Start!')">Start Game</button>
+<h2 style="text-align:center;color:white;">Car Racing Game</h2>
+
+<div id="game">
+<div id="car"></div>
+</div>
+
+<script>
+let car=document.getElementById("car");
+let game=document.getElementById("game");
+let carLeft=125;
+
+document.addEventListener("keydown",function(e){
+if(e.key==="ArrowLeft" && carLeft>0){
+carLeft-=20;
+}
+if(e.key==="ArrowRight" && carLeft<250){
+carLeft+=20;
+}
+car.style.left=carLeft+"px";
+});
+
+function createEnemy(){
+let enemy=document.createElement("div");
+enemy.classList.add("enemy");
+enemy.style.left=Math.floor(Math.random()*250)+"px";
+game.appendChild(enemy);
+
+let enemyTop=-100;
+
+let move=setInterval(function(){
+enemyTop+=5;
+enemy.style.top=enemyTop+"px";
+
+if(enemyTop>500){
+enemy.remove();
+clearInterval(move);
+}
+
+let carRect=car.getBoundingClientRect();
+let enemyRect=enemy.getBoundingClientRect();
+
+if(
+carRect.left<enemyRect.left+50 &&
+carRect.left+50>enemyRect.left &&
+carRect.top<enemyRect.top+80 &&
+carRect.top+80>enemyRect.top
+){
+alert("Game Over");
+location.reload();
+}
+
+},50);
+}
+
+setInterval(createEnemy,2000);
+</script>
 
 </body>
 </html>
