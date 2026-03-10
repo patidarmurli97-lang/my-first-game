@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Car Racing Game</title>
-
+<title>Professional Car Racing Game</title>
 <style>
 body{
 margin:0;
-background:gray;
-overflow:hidden;
+font-family:Arial;
+background:#555;
+text-align:center;
 }
-
 #game{
 width:300px;
 height:500px;
-background:black;
+background:#444 url("https://i.imgur.com/F8e1QfX.png") repeat-y;
+background-size: cover;
 margin:auto;
 position:relative;
 overflow:hidden;
+border:4px solid white;
 }
-
 #car{
 width:60px;
 height:100px;
@@ -27,88 +27,200 @@ background-size:cover;
 position:absolute;
 bottom:20px;
 left:120px;
+z-index:10;
+transition:left 0.1s;
 }
-
 .enemy{
 width:60px;
 height:100px;
-background-image:url("https://i.imgur.com/3ZQ3Z6P.png");
 background-size:cover;
 position:absolute;
-top:-100px;
+top:-120px;
+}
+.sideObj{
+width:30px;
+height:30px;
+position:absolute;
+background-size:cover;
+top:-50px;
+}
+#startBtn{
+padding:10px 20px;
+font-size:18px;
+margin:10px;
+cursor:pointer;
+}
+#score, #highscore{
+color:white;
+font-size:18px;
+margin:5px;
+}
+.explosion{
+width:60px;
+height:60px;
+background-image:url("https://i.imgur.com/kwJ4B3Q.png");
+background-size:cover;
+position:absolute;
+z-index:20;
 }
 </style>
-
 </head>
-
 <body>
 
-<h2 style="text-align:center;color:white;">Car Racing Game</h2>
+<h2>Professional Car Racing</h2>
+<button id="startBtn">Start Game</button>
+<div id="score">Score: 0</div>
+<div id="highscore">Highscore: 0</div>
 
 <div id="game">
 <div id="car"></div>
 </div>
 
-<script>
+<audio id="bgMusic" loop>
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+<audio id="crashSound">
+<source src="https://www.soundjay.com/button/sounds/button-16.mp3" type="audio/mpeg">
+</audio>
 
+<script>
 let car=document.getElementById("car");
 let game=document.getElementById("game");
+let startBtn=document.getElementById("startBtn");
+let scoreText=document.getElementById("score");
+let highscoreText=document.getElementById("highscore");
+let bgMusic=document.getElementById("bgMusic");
+let crashSound=document.getElementById("crashSound");
+
 let carLeft=120;
+let score=0;
+let highscore=localStorage.getItem("highscore")||0;
+highscoreText.innerHTML="Highscore: "+highscore;
 
+let gameRunning=false;
+let enemies=[];
+let sides=[];
+let enemyImages=[
+"https://i.imgur.com/3ZQ3Z6P.png",
+"https://i.imgur.com/Y4o7XH3.png"
+];
+let sideImages=[
+"https://i.imgur.com/T7dhW1Z.png", // tree
+"https://i.imgur.com/OYcXh4u.png"  // sign
+];
+let speed=6;
+
+// Arrow keys movement
 document.addEventListener("keydown",function(e){
-
-if(e.key==="ArrowLeft" && carLeft>0){
-carLeft-=20;
-}
-
-if(e.key==="ArrowRight" && carLeft<240){
-carLeft+=20;
-}
-
+if(!gameRunning) return;
+if(e.key==="ArrowLeft" && carLeft>0) carLeft-=20;
+if(e.key==="ArrowRight" && carLeft<240) carLeft+=20;
 car.style.left=carLeft+"px";
-
 });
 
-function createEnemy(){
+// Touch controls
+let startX=null;
+game.addEventListener("touchstart",(e)=>{startX=e.touches[0].clientX;});
+game.addEventListener("touchmove",(e)=>{
+if(!gameRunning) return;
+let diff=e.touches[0].clientX - startX;
+if(diff>30 && carLeft<240) carLeft+=20;
+if(diff<-30 && carLeft>0) carLeft-=20;
+car.style.left=carLeft+"px";
+startX=e.touches[0].clientX;
+});
 
+// Start game
+startBtn.onclick=function(){
+gameRunning=true;
+startBtn.style.display="none";
+score=0;
+speed=6;
+scoreText.innerHTML="Score: 0";
+bgMusic.play();
+setInterval(()=>createEnemy(),1500);
+setInterval(()=>createSideObjects(),3000);
+};
+
+// Create enemy cars
+function createEnemy(){
+if(!gameRunning) return;
 let enemy=document.createElement("div");
 enemy.classList.add("enemy");
+enemy.style.backgroundImage=`url('${enemyImages[Math.floor(Math.random()*enemyImages.length)]}')`;
 enemy.style.left=Math.floor(Math.random()*240)+"px";
 game.appendChild(enemy);
+enemies.push(enemy);
 
-let enemyTop=-100;
-
+let enemyTop=-120;
 let move=setInterval(function(){
-
-enemyTop+=5;
+enemyTop+=speed;
 enemy.style.top=enemyTop+"px";
 
 if(enemyTop>500){
 enemy.remove();
 clearInterval(move);
+enemies.shift();
+score++;
+scoreText.innerHTML="Score: "+score;
+// Increase speed every 5 points
+if(score%5===0) speed+=1;
 }
 
 let carRect=car.getBoundingClientRect();
 let enemyRect=enemy.getBoundingClientRect();
 
-if(
-carRect.left<enemyRect.left+60 &&
+if(carRect.left<enemyRect.left+60 &&
 carRect.left+60>enemyRect.left &&
 carRect.top<enemyRect.top+100 &&
-carRect.top+100>enemyRect.top
-){
-alert("Game Over");
-location.reload();
+carRect.top+100>enemyRect.top){
+gameOver(enemyRect.left,enemyRect.top);
+clearInterval(move);
 }
-
 },50);
-
 }
 
-setInterval(createEnemy,2000);
+// Side scenery objects
+function createSideObjects(){
+if(!gameRunning) return;
+let side=document.createElement("div");
+side.classList.add("sideObj");
+side.style.backgroundImage=`url('${sideImages[Math.floor(Math.random()*sideImages.length)]}')`;
+side.style.left=Math.random()<0.5?0:270+"px";
+game.appendChild(side);
+sides.push(side);
 
+let topPos=-50;
+let move=setInterval(function(){
+topPos+=speed;
+side.style.top=topPos+"px";
+if(topPos>500){side.remove();clearInterval(move);}
+},50);
+}
+
+// Explosion and game over
+function gameOver(x,y){
+crashSound.play();
+showExplosion(x,y);
+gameRunning=false;
+bgMusic.pause();
+setTimeout(()=>{
+alert("Game Over\nScore: "+score);
+if(score>highscore){localStorage.setItem("highscore",score);}
+location.reload();
+},800);
+}
+
+function showExplosion(x,y){
+let exp=document.createElement("div");
+exp.classList.add("explosion");
+exp.style.left=x+"px";
+exp.style.top=y+"px";
+game.appendChild(exp);
+setTimeout(()=>exp.remove(),700);
+}
 </script>
-
 </body>
 </html>
+
 
