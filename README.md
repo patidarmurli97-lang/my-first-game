@@ -24,7 +24,7 @@ width:60px;
 height:100px;
 background-image:url<img width="800" height="495" alt="pngwing com" src="https://github.com/user-attachments/assets/99550b9e-9f68-427c-9195-4739b563a9b3" />
 
-background-size:cover;
+background-size:contain
 position:absolute;
 bottom:20px;
 left:120px;
