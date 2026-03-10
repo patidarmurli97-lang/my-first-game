@@ -1,52 +1,115 @@
 <!DOCTYPE html>
-
 <html>
 <head>
-<title>Simple Click Game</title>
+<title>Car Racing Game</title>
+
 <style>
 body{
-text-align:center;
-font-family:Arial;
-background:#f0f0f0;
+margin:0;
+background:gray;
+overflow:hidden;
 }
 
-h1{
-color:#333;
+#game{
+width:300px;
+height:500px;
+background:black;
+margin:auto;
+position:relative;
+overflow:hidden;
 }
 
-button{
-padding:15px 30px;
-font-size:20px;
-background:green;
-color:white;
-border:none;
-border-radius:10px;
-cursor:pointer;
+#car{
+width:60px;
+height:100px;
+background-image:url("https://i.imgur.com/7QFQY9R.png");
+background-size:cover;
+position:absolute;
+bottom:20px;
+left:120px;
 }
 
-button:hover{
-background:darkgreen;
-} </style>
+.enemy{
+width:60px;
+height:100px;
+background-image:url("https://i.imgur.com/3ZQ3Z6P.png");
+background-size:cover;
+position:absolute;
+top:-100px;
+}
+</style>
 
 </head>
 
 <body>
 
-<h1>My GitHub Game</h1>
-<p>Score: <span id="score">0</span></p>
+<h2 style="text-align:center;color:white;">Car Racing Game</h2>
 
-<button onclick="addScore()">Click Me</button>
+<div id="game">
+<div id="car"></div>
+</div>
 
 <script>
-let score = 0;
 
-function addScore(){
-score++;
-document.getElementById("score").innerText = score;
+let car=document.getElementById("car");
+let game=document.getElementById("game");
+let carLeft=120;
+
+document.addEventListener("keydown",function(e){
+
+if(e.key==="ArrowLeft" && carLeft>0){
+carLeft-=20;
 }
+
+if(e.key==="ArrowRight" && carLeft<240){
+carLeft+=20;
+}
+
+car.style.left=carLeft+"px";
+
+});
+
+function createEnemy(){
+
+let enemy=document.createElement("div");
+enemy.classList.add("enemy");
+enemy.style.left=Math.floor(Math.random()*240)+"px";
+game.appendChild(enemy);
+
+let enemyTop=-100;
+
+let move=setInterval(function(){
+
+enemyTop+=5;
+enemy.style.top=enemyTop+"px";
+
+if(enemyTop>500){
+enemy.remove();
+clearInterval(move);
+}
+
+let carRect=car.getBoundingClientRect();
+let enemyRect=enemy.getBoundingClientRect();
+
+if(
+carRect.left<enemyRect.left+60 &&
+carRect.left+60>enemyRect.left &&
+carRect.top<enemyRect.top+100 &&
+carRect.top+100>enemyRect.top
+){
+alert("Game Over");
+location.reload();
+}
+
+},50);
+
+}
+
+setInterval(createEnemy,2000);
+
 </script>
 
 </body>
-</html>
+</html>kfq
 
 
