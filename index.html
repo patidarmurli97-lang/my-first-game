@@ -1,264 +1,185 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Professional Car Racing Game</title>
+<title>Advanced Snake Game</title>
+
 <style>
-<style>
-
-#car{
-width:60px;
-height:100px;
-background-image:
-
-#car{
-width:60px;
-height:100px;
-background-image:
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-}
-
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-}
-
-.enemy{
-width:60px;
-height:100px;
-background-image:url("car.png");
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-
-</style>
-#game{
-width:300px;
-height:500px;
-background:#444 url("https://i.imgur.com/F8e1QfX.png") repeat-y;
-background-size: cover;
-margin:auto;
-position:relative;
-overflow:hidden;
-border:4px solid white;
-}
-#car{
-width:60px;
-height:100px;
-background-image:url("https://i.imgur.com/7QFQY9R.png");
-background-size:cover;
-position:absolute;
-bottom:20px;
-left:120px;
-z-index:10;
-transition:left 0.1s;
-}
-.enemy{
-width:60px;
-height:100px;
-background-size:cover;
-position:absolute;
-top:-120px;
-}
-.sideObj{
-width:30px;
-height:30px;
-position:absolute;
-background-size:cover;
-top:-50px;
-}
-#startBtn{
-padding:10px 20px;
-font-size:18px;
-margin:10px;
-cursor:pointer;
-}
-#score, #highscore{
+body{
+text-align:center;
+font-family:Arial;
+background:#222;
 color:white;
-font-size:18px;
+}
+
+canvas{
+background:black;
+margin-top:20px;
+}
+
+button{
+padding:10px 20px;
+font-size:16px;
 margin:5px;
 }
-.explosion{
-width:60px;
-height:60px;
-background-image:url("https://i.imgur.com/kwJ4B3Q.png");
-background-size:cover;
-position:absolute;
-z-index:20;
+
+#controls{
+margin-top:10px;
 }
 </style>
+
 </head>
+
 <body>
 
-<h2>Professional Car Racing</h2>
-<button id="startBtn">Start Game</button>
-<div id="score">Score: 0</div>
-<div id="highscore">Highscore: 0</div>
+<h2>Snake Game</h2>
 
-<div id="game">
-<div id="car"></div>
+<button onclick="startGame()">Start Game</button>
+<button onclick="restartGame()">Restart</button>
+
+<h3 id="score">Score: 0</h3>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="controls">
+<br>
+<button onclick="setDirection('UP')">⬆</button>
+<br>
+<button onclick="setDirection('LEFT')">⬅</button>
+<button onclick="setDirection('DOWN')">⬇</button>
+<button onclick="setDirection('RIGHT')">➡</button>
 </div>
 
-<audio id="bgMusic" loop>
-<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-</audio>
-<audio id="crashSound">
-<source src="https://www.soundjay.com/button/sounds/button-16.mp3" type="audio/mpeg">
-</audio>
-
 <script>
-let car=document.getElementById("car");
-let game=document.getElementById("game");
-let startBtn=document.getElementById("startBtn");
-let scoreText=document.getElementById("score");
-let highscoreText=document.getElementById("highscore");
-let bgMusic=document.getElementById("bgMusic");
-let crashSound=document.getElementById("crashSound");
 
-let carLeft=120;
-let score=0;
-let highscore=localStorage.getItem("highscore")||0;
-highscoreText.innerHTML="Highscore: "+highscore;
+let canvas=document.getElementById("game");
+let ctx=canvas.getContext("2d");
 
-let gameRunning=false;
-let enemies=[];
-let sides=[];
-let enemyImages=[
-"https://i.imgur.com/3ZQ3Z6P.png",
-"https://i.imgur.com/Y4o7XH3.png"
-];
-let sideImages=[
-"https://i.imgur.com/T7dhW1Z.png", // tree
-"https://i.imgur.com/OYcXh4u.png"  // sign
-];
-let speed=6;
+let box=20;
 
-// Arrow keys movement
-document.addEventListener("keydown",function(e){
-if(!gameRunning) return;
-if(e.key==="ArrowLeft" && carLeft>0) carLeft-=20;
-if(e.key==="ArrowRight" && carLeft<240) carLeft+=20;
-car.style.left=carLeft+"px";
-});
+let snake;
+let food;
+let direction;
+let score;
+let game;
 
-// Touch controls
-let startX=null;
-game.addEventListener("touchstart",(e)=>{startX=e.touches[0].clientX;});
-game.addEventListener("touchmove",(e)=>{
-if(!gameRunning) return;
-let diff=e.touches[0].clientX - startX;
-if(diff>30 && carLeft<240) carLeft+=20;
-if(diff<-30 && carLeft>0) carLeft-=20;
-car.style.left=carLeft+"px";
-startX=e.touches[0].clientX;
-});
+function startGame(){
 
-// Start game
-startBtn.onclick=function(){
-gameRunning=true;
-startBtn.style.display="none";
-score=0;
-speed=6;
-scoreText.innerHTML="Score: 0";
-bgMusic.play();
-setInterval(()=>createEnemy(),1500);
-setInterval(()=>createSideObjects(),3000);
+snake=[{x:200,y:200}];
+
+food={
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
 };
 
-// Create enemy cars
-function createEnemy(){
-if(!gameRunning) return;
-let enemy=document.createElement("div");
-enemy.classList.add("enemy");
-enemy.style.backgroundImage=`url('${enemyImages[Math.floor(Math.random()*enemyImages.length)]}')`;
-enemy.style.left=Math.floor(Math.random()*240)+"px";
-game.appendChild(enemy);
-enemies.push(enemy);
+direction="RIGHT";
 
-let enemyTop=-120;
-let move=setInterval(function(){
-enemyTop+=speed;
-enemy.style.top=enemyTop+"px";
+score=0;
 
-if(enemyTop>500){
-enemy.remove();
-clearInterval(move);
-enemies.shift();
+document.getElementById("score").innerHTML="Score: 0";
+
+clearInterval(game);
+
+game=setInterval(draw,100);
+
+}
+
+function restartGame(){
+startGame();
+}
+
+document.addEventListener("keydown",function(event){
+
+if(event.key==="ArrowLeft") setDirection("LEFT");
+if(event.key==="ArrowUp") setDirection("UP");
+if(event.key==="ArrowRight") setDirection("RIGHT");
+if(event.key==="ArrowDown") setDirection("DOWN");
+
+});
+
+function setDirection(dir){
+
+if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT";
+if(dir==="UP" && direction!=="DOWN") direction="UP";
+if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
+if(dir==="DOWN" && direction!=="UP") direction="DOWN";
+
+}
+
+function draw(){
+
+ctx.fillStyle="black";
+ctx.fillRect(0,0,400,400);
+
+for(let i=0;i<snake.length;i++){
+
+ctx.fillStyle=i==0?"lime":"green";
+ctx.fillRect(snake[i].x,snake[i].y,box,box);
+
+}
+
+ctx.fillStyle="red";
+ctx.fillRect(food.x,food.y,box,box);
+
+let snakeX=snake[0].x;
+let snakeY=snake[0].y;
+
+if(direction==="LEFT") snakeX-=box;
+if(direction==="UP") snakeY-=box;
+if(direction==="RIGHT") snakeX+=box;
+if(direction==="DOWN") snakeY+=box;
+
+if(snakeX===food.x && snakeY===food.y){
+
 score++;
-scoreText.innerHTML="Score: "+score;
-// Increase speed every 5 points
-if(score%5===0) speed+=1;
+document.getElementById("score").innerHTML="Score: "+score;
+
+food={
+x:Math.floor(Math.random()*20)*box,
+y:Math.floor(Math.random()*20)*box
+};
+
+}else{
+
+snake.pop();
+
 }
 
-let carRect=car.getBoundingClientRect();
-let enemyRect=enemy.getBoundingClientRect();
+let newHead={x:snakeX,y:snakeY};
 
-if(carRect.left<enemyRect.left+60 &&
-carRect.left+60>enemyRect.left &&
-carRect.top<enemyRect.top+100 &&
-carRect.top+100>enemyRect.top){
-gameOver(enemyRect.left,enemyRect.top);
-clearInterval(move);
-}
-},50);
-}
+if(
+snakeX<0 || snakeY<0 ||
+snakeX>=400 || snakeY>=400 ||
+collision(newHead,snake)
+){
 
-// Side scenery objects
-function createSideObjects(){
-if(!gameRunning) return;
-let side=document.createElement("div");
-side.classList.add("sideObj");
-side.style.backgroundImage=`url('${sideImages[Math.floor(Math.random()*sideImages.length)]}')`;
-side.style.left=Math.random()<0.5?0:270+"px";
-game.appendChild(side);
-sides.push(side);
+clearInterval(game);
+alert("Game Over");
 
-let topPos=-50;
-let move=setInterval(function(){
-topPos+=speed;
-side.style.top=topPos+"px";
-if(topPos>500){side.remove();clearInterval(move);}
-},50);
 }
 
-// Explosion and game over
-function gameOver(x,y){
-crashSound.play();
-showExplosion(x,y);
-gameRunning=false;
-bgMusic.pause();
-setTimeout(()=>{
-alert("Game Over\nScore: "+score);
-if(score>highscore){localStorage.setItem("highscore",score);}
-location.reload();
-},800);
+snake.unshift(newHead);
+
 }
 
-function showExplosion(x,y){
-let exp=document.createElement("div");
-exp.classList.add("explosion");
-exp.style.left=x+"px";
-exp.style.top=y+"px";
-game.appendChild(exp);
-setTimeout(()=>exp.remove(),700);
+function collision(head,array){
+
+for(let i=0;i<array.length;i++){
+
+if(head.x===array[i].x && head.y===array[i].y){
+return true;
 }
+
+}
+
+return false;
+
+}
+
 </script>
+
 </body>
 </html>
+
 
 
 
