@@ -22,7 +22,7 @@ overflow:hidden;
 #car{
 width:60px;
 height:100px;
-background-image:url<img width="800" height="495" alt="pngwing com" src="https://github.com/user-attachments/assets/99550b9e-9f68-427c-9195-4739b563a9b3" />
+background-image:src="car.png" width="50" height"100" alt="car"
 
 background-size:contain
 position:absolute;
